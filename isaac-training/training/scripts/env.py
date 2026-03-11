@@ -1,7 +1,7 @@
 import torch
-import einops
+import einops # 改变矩阵形状
 import numpy as np
-from tensordict.tensordict import TensorDict, TensorDictBase
+from tensordict.tensordict import Tenso rDict, TensorDictBase
 from torchrl.data import UnboundedContinuousTensorSpec, CompositeSpec, DiscreteTensorSpec
 from omni_drones.envs.isaac_env import IsaacEnv, AgentSpec
 import omni.isaac.orbit.sim as sim_utils
@@ -293,9 +293,9 @@ class NavigationEnv(IsaacEnv):
 
     def _set_specs(self):
         observation_dim = 8
-        num_dim_each_dyn_obs_state = 10
+        num_dim_each_dyn_obs_state = 10  #分别定义了基础信息状态维度和动态障碍物的信息维度
 
-        # Observation Spec
+        # Observation Spec  定义了神经网络的输入结构
         self.observation_spec = CompositeSpec({
             "agents": CompositeSpec({
                 "observation": CompositeSpec({
@@ -307,36 +307,37 @@ class NavigationEnv(IsaacEnv):
             }).expand(self.num_envs)
         }, shape=[self.num_envs], device=self.device)
         
-        # Action Spec
+        # Action Spec 动作空间
         self.action_spec = CompositeSpec({
             "agents": CompositeSpec({
                 "action": self.drone.action_spec, # number of motor
             })
         }).expand(self.num_envs).to(self.device)
         
-        # Reward Spec
+        # Reward Spec 奖励函数
         self.reward_spec = CompositeSpec({
             "agents": CompositeSpec({
                 "reward": UnboundedContinuousTensorSpec((1,))
             })
         }).expand(self.num_envs).to(self.device)
 
-        # Done Spec
+        # Done Spec  结束条件
         self.done_spec = CompositeSpec({
             "done": DiscreteTensorSpec(2, (1,), dtype=torch.bool),
             "terminated": DiscreteTensorSpec(2, (1,), dtype=torch.bool),
             "truncated": DiscreteTensorSpec(2, (1,), dtype=torch.bool),
         }).expand(self.num_envs).to(self.device) 
 
-
+        # 统计指标，用于训练和评估 给研究人员使用
         stats_spec = CompositeSpec({
-            "return": UnboundedContinuousTensorSpec(1),
-            "episode_len": UnboundedContinuousTensorSpec(1),
-            "reach_goal": UnboundedContinuousTensorSpec(1),
-            "collision": UnboundedContinuousTensorSpec(1),
-            "truncated": UnboundedContinuousTensorSpec(1),
+            "return": UnboundedContinuousTensorSpec(1),  # 累计奖励
+            "episode_len": UnboundedContinuousTensorSpec(1),  # 当前回合长度
+            "reach_goal": UnboundedContinuousTensorSpec(1),  # 是否到达目标点
+            "collision": UnboundedContinuousTensorSpec(1),  # 是否发生碰撞
+            "truncated": UnboundedContinuousTensorSpec(1),  # 是否被截断
         }).expand(self.num_envs).to(self.device)
 
+        # 完整的无人机原始物理状态
         info_spec = CompositeSpec({
             "drone_state": UnboundedContinuousTensorSpec((self.drone.n, 13), device=self.device),
         }).expand(self.num_envs).to(self.device)
