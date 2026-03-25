@@ -97,7 +97,10 @@ class NavigationEnv(IsaacEnv):
         
         # Ground Plane
         cfg_ground = sim_utils.GroundPlaneCfg(color=(0.1, 0.1, 0.1), size=(300., 300.))
-        cfg_ground.func("/World/defaultGroundPlane", cfg_ground, translation=(0, 0, 0.01))
+        # cfg_ground.func("/World/defaultGroundPlane", cfg_ground, translation=(0, 0, 0.01))  # 需要联网下载地板，会有错误
+        # 替换为以下本地生成的
+        from omni.isaac.core.objects import GroundPlane
+        GroundPlane(prim_path="/World/defaultGroundPlane", z_position=0.0)
 
         self.map_range = [20.0, 20.0, 4.5]
 
