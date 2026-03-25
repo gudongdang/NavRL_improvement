@@ -24,12 +24,12 @@ sim:
   # gpu_total_aggregate_pairs_capacity: 4194304
 
   # 尝试参数
-  gpu_max_rigid_contact_count: 2097152        # 调大，防止碰撞点太多导致溢出
-  gpu_max_rigid_patch_count: 524288          # 配合 contact count 调大
-  gpu_found_lost_pairs_capacity: 16777216     # 调大到 2^24
-  gpu_found_lost_aggregate_pairs_capacity: 33554432 # 保持这个高位
-  gpu_total_aggregate_pairs_capacity: 16777216     # <--- 重点修改这里！之前太小了
-  
+  gpu_max_rigid_contact_count: 1048576        # 适中，足够支持大规模碰撞
+  gpu_max_rigid_patch_count: 163840           # 恢复原默认或略大
+  gpu_found_lost_pairs_capacity: 4194304      # 恢复 400万级别
+  gpu_found_lost_aggregate_pairs_capacity: 8388608 # 调至 800万，解决之前的报错
+  gpu_total_aggregate_pairs_capacity: 8388608     # 调至 800万，这是关键，够用了
+
   gpu_max_soft_body_contacts: 1048576
   gpu_max_particle_contacts: 1048576
   gpu_heap_capacity: 67108864
