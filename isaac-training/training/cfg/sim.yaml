@@ -16,11 +16,20 @@ sim:
   enable_scene_query_support: true
 
   # GPU buffers
-  gpu_max_rigid_contact_count: 524288
-  gpu_max_rigid_patch_count: 163840 # 33554432
-  gpu_found_lost_pairs_capacity: 4194304
-  gpu_found_lost_aggregate_pairs_capacity: 33554432
-  gpu_total_aggregate_pairs_capacity: 4194304
+  # 原参数
+  # gpu_max_rigid_contact_count: 524288
+  # gpu_max_rigid_patch_count: 163840 # 33554432
+  # gpu_found_lost_pairs_capacity: 4194304
+  # gpu_found_lost_aggregate_pairs_capacity: 33554432
+  # gpu_total_aggregate_pairs_capacity: 4194304
+
+  # 尝试参数
+  gpu_max_rigid_contact_count: 2097152        # 调大，防止碰撞点太多导致溢出
+  gpu_max_rigid_patch_count: 524288          # 配合 contact count 调大
+  gpu_found_lost_pairs_capacity: 16777216     # 调大到 2^24
+  gpu_found_lost_aggregate_pairs_capacity: 33554432 # 保持这个高位
+  gpu_total_aggregate_pairs_capacity: 16777216     # <--- 重点修改这里！之前太小了
+  
   gpu_max_soft_body_contacts: 1048576
   gpu_max_particle_contacts: 1048576
   gpu_heap_capacity: 67108864
