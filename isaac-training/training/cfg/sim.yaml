@@ -23,13 +23,19 @@ sim:
   # gpu_found_lost_aggregate_pairs_capacity: 33554432
   # gpu_total_aggregate_pairs_capacity: 4194304
 
-  # 尝试参数
-  gpu_max_rigid_contact_count: 1048576        # 适中，足够支持大规模碰撞
-  gpu_max_rigid_patch_count: 163840           # 恢复原默认或略大
-  gpu_found_lost_pairs_capacity: 4194304      # 恢复 400万级别
-  gpu_found_lost_aggregate_pairs_capacity: 8388608 # 调至 800万，解决之前的报错
-  gpu_total_aggregate_pairs_capacity: 8388608     # 调至 800万，这是关键，够用了
+  # # 尝试参数
+  # gpu_max_rigid_contact_count: 1048576        # 适中，足够支持大规模碰撞
+  # gpu_max_rigid_patch_count: 163840           # 恢复原默认或略大
+  # gpu_found_lost_pairs_capacity: 4194304      # 恢复 400万级别
+  # gpu_found_lost_aggregate_pairs_capacity: 8388608 # 调至 800万，解决之前的报错
+  # gpu_total_aggregate_pairs_capacity: 8388608     # 调至 800万，这是关键，够用了
 
+  # 尝试参数2
+  gpu_max_rigid_contact_count: 524288
+  gpu_found_lost_pairs_capacity: 4194304
+  gpu_found_lost_aggregate_pairs_capacity: 8388608
+  gpu_total_aggregate_pairs_capacity: 8388608
+  
   gpu_max_soft_body_contacts: 1048576
   gpu_max_particle_contacts: 1048576
   gpu_heap_capacity: 67108864
