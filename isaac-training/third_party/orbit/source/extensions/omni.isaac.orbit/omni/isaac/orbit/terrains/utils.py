@@ -31,10 +31,11 @@ def color_meshes_by_height(meshes: list[trimesh.Trimesh], **kwargs) -> trimesh.T
     Returns:
         A trimesh object with the vertices colored based on the z-coordinate (height) of each vertex.
     """
-    # 为了避免版本依赖问题，不上色
-    return mesh  
+      
     # Combine all meshes into a single mesh
     mesh = trimesh.util.concatenate(meshes)
+    # 为了避免版本依赖问题，不上色
+    return mesh
     # Get the z-coordinates of each vertex
     heights = mesh.vertices[:, 2]
     # Check if the z-coordinates are all the same
