@@ -532,8 +532,54 @@ class NavigationEnv(IsaacEnv):
             dynamic_collision = torch.any(dynamic_collision_each, dim=1)
 
             # distance to dynamic obstacle for reward calculation (not 100% correct in math but should be good enough for approximation)
-            closest_dyn_obs_distance_reward = closest_dyn_obs_rpos.norm(dim=-1) - closest_dyn_obs_size[..., 0]/2. # for those 2D obstacle, z distance will not be considered
+            # 原作者的碰撞距离计算
+            # closest_dyn_obs_distance_reward = closest_dyn_obs_rpos.norm(dim=-1) - closest_dyn_obs_size[..., 0]/2. # for those 2D obstacle, z distance will not be considered
+            # closest_dyn_obs_distance_reward[dyn_obs_range_mask] = self.cfg.sensor.lidar_range
+
+            # =========================================================================
+            #  P2M (Point-to-Motion) 距离场时空重塑 (Distance Field Reshaping)
+            # =========================================================================
+            
+            # 1. 计算相对位置矢量: (p - p_dobs)
+            # closest_dyn_obs_rpos 已经是 (p_dobs - p)，因此取负号
+            vec_p = -closest_dyn_obs_rpos 
+            dist_p = vec_p.norm(dim=-1) # 物理距离 ||p - p_dobs||
+            
+            # 2. 计算相对速度矢量: (v_dobs - v)
+            # closest_dyn_obs_vel: (num_envs, N, 3)
+            # self.drone.vel_w[..., :3]: (num_envs, 1, 3)，PyTorch 会自动广播(Broadcast)对齐维度
+            vec_v = closest_dyn_obs_vel - self.drone.vel_w[..., :3]
+            
+            # 3. 计算相对速度与位置连线的夹角 theta
+            cos_theta = torch.nn.functional.cosine_similarity(vec_p, vec_v, dim=-1)
+            # 将 cos_theta 限制在安全范围内防止 acos 产生 NaN 崩溃
+            theta = torch.acos(cos_theta.clamp(-1.0 + 1e-6, 1.0 - 1e-6))
+            
+            # 4. 计算 P2M 论文中的重塑拉伸系数 K
+            k_v = vec_v.norm(dim=-1)                 # 系数1: 相对速度的大小 (越快惩罚越远)
+            k_theta = 1.0 - (2.0 * theta / torch.pi) # 系数2: 角度系数 (越迎面飞来惩罚越重)
+            
+            # d_v: 无人机到障碍物速度延长线的垂直距离 (d_v = 距离 * sin(theta))
+            d_v = dist_p * torch.sin(theta)
+            k_d = torch.exp(1.0 / (1.0 + d_v))       # 系数3: 偏航距离系数
+            
+            # 5. 组装最终的动态惩罚场系数 K
+            # 仅当障碍物正向我们靠近时 (theta < 90度，即 cos_theta > 0) 才拉伸惩罚场
+            k = torch.ones_like(k_v)
+            mask_approaching = cos_theta > 0
+            k[mask_approaching] = 1.0 + k_v[mask_approaching] * k_theta[mask_approaching] * k_d[mask_approaching]
+            
+            # 6. 计算重塑后的虚拟安全距离
+            # 真实物理表面距离 = 质心距离 - 障碍物宽度/2
+            physical_surface_dist = dist_p - closest_dyn_obs_size[..., 0]/2.
+            
+            # 时空重塑距离 = 物理表面距离 / K
+            # (K 越大，系统"以为"的距离就越近，从而诱导无人机在物理距离还很远时就提前避让)
+            closest_dyn_obs_distance_reward = physical_surface_dist / k
+            
+            # 超出雷达探测范围的障碍物不计算惩罚
             closest_dyn_obs_distance_reward[dyn_obs_range_mask] = self.cfg.sensor.lidar_range
+            # =========================================================================
             
         else:
             dyn_obs_states = torch.zeros(self.num_envs, 1, self.cfg.algo.feature_extractor.dyn_obs_num, 10, device=self.cfg.device)
