@@ -34,5 +34,5 @@ wandb:
   project: NavRL
   name: navigation_training
   entity: 562917954-ecust
-  mode: online # online
+  mode: offline # online
   run_id: #kw9xf9k9
